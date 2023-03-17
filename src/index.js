@@ -9,6 +9,7 @@ const fs = require('fs');
 const schemas = require("./schema");
 const PORT = process.env.PORT || 8999;
 const abs_path = path.join(__dirname, "../public")
+app.use('/uploads', express.static(path.join(__dirname, "../uploads")));
 app.use(express.static(abs_path));
 app.use(body_parser.urlencoded({
     extended: true
@@ -24,7 +25,7 @@ app.use(session({
 const upload = multer({
     storage: multer.diskStorage({
         destination: function (req, file, cb) {
-            cb(null, "public/images/");
+            cb(null, "uploads/");
         },
         filename: function (req, file, cb) {
             img = Date.now() + "_" + file.originalname;
@@ -81,7 +82,7 @@ app.post("/admin/add-photos", upload, async (req, res) => {
     }else{
         res.redirect("/admin/login")
     }
-  });
+});
   
 app.listen(PORT, () => {
     console.log("Server is started at " + PORT);
