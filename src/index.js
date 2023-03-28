@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const os = require('os');
 const path = require("path");
 const hbs = require("hbs");
 const body_parser = require("body-parser");
@@ -86,35 +87,67 @@ app.get("/admin/add-photos", (req, res) => {
 //     }
 // });
 
-app.post("/admin/add-photos", upload, [check('description').isLength({min:2})], async (req, res) => {
-    if(req.session.admin){
-        try{
-            let img = (req.file_image)? req.file.filename: null
-            const errors = validationResult(req);
-            if(!errors.isEmpty){
-                return res.status(400).json({errors: errors.array()});
-            }
-            res.send("Saved");
-        }catch(err){
-            console.error("ERRORUPLOADEDIMAGE"+err.message);
-            res.status(500).send("Internal server error");
-        }
-        // let image = {
-        //     image: img
-        //   };
-        //   try {
-        //     const result = await schemas.images.insertMany([image]);
-        //     console.log("uploaded");
-        //     res.redirect("/admin");
-        //   } catch (err) {
-        //     console.log("Not uploaded");
-        //     res.redirect("/admin/add-photos");
-        //   }
-    }else{
-        res.redirect("/admin/login")
-    }
-});
+// app.post("/admin/add-photos", upload, [check('description').isLength({min:2})], async (req, res) => {
+//     if(req.session.admin){
+//         try{
+//             let img = (req.file_image)? req.file.filename: null
+//             const errors = validationResult(req);
+//             if(!errors.isEmpty){
+//                 return res.status(400).json({errors: errors.array()});
+//             }
+//             res.send("Saved");
+//         }catch(err){
+//             console.error("ERRORUPLOADEDIMAGE"+err.message);
+//             res.status(500).send("Internal server error");
+//         }
+//         // let image = {
+//         //     image: img
+//         //   };
+//         //   try {
+//         //     const result = await schemas.images.insertMany([image]);
+//         //     console.log("uploaded");
+//         //     res.redirect("/admin");
+//         //   } catch (err) {
+//         //     console.log("Not uploaded");
+//         //     res.redirect("/admin/add-photos");
+//         //   }
+//     }else{
+//         res.redirect("/admin/login")
+//     }
+// });
   
+
+app.post('/admin/add-photos', upload, [check('description').isLength({ min: 2 })], async (req, res) => {
+    if (req.session.admin) {
+      try {
+        let img = req.file ? req.file.filename : null;
+        const errors = validationResult(req);
+        if (!errors.isEmpty) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+        // Get the system's temporary directory
+        const tempDir = os.tmpdir();
+        // Build the path to the temporary file
+        const tempFile = path.join(tempDir, req.file.filename);
+        // Write the uploaded file to the temporary directory
+        fs.writeFile(tempFile, req.file.buffer, (err) => {
+          if (err) {
+            console.error('ERRORUPLOADEDIMAGE' + err.message);
+            res.status(500).send('Internal server error');
+          } else {
+            // Do something with the uploaded file
+            // ...
+            res.status(200).send('File uploaded successfully');
+          }
+        });
+      } catch (err) {
+        console.error('ERRORUPLOADEDIMAGE' + err.message);
+        res.status(500).send('Intersfsnal server error');
+      }
+    } else {
+      res.redirect('/admin/login');
+    }
+  });
 app.listen(PORT, () => {
     console.log("Server is started at " + PORT);
 })
